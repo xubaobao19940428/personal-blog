@@ -5,6 +5,13 @@ import { blogPosts } from '../data/posts';
 import { projects } from '../data/projects';
 import BlogCard from '../components/BlogCard';
 import ProjectCard from '../components/ProjectCard';
+import { 
+  SimpleAnimatedElement, 
+  SimpleStaggeredContainer, 
+  SimpleFloatingParticles, 
+  SimpleTextReveal, 
+  SimpleMagneticButton 
+} from '../components/SimpleAnimations';
 
 export default function Home() {
   const featuredPosts = blogPosts.filter(post => post.featured).slice(0, 3);
@@ -25,76 +32,89 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen overflow-x-hidden">
       {/* Hero Section */}
       <section className="particles gradient-bg py-20 relative overflow-hidden">
-        {/* 浮动粒子 */}
-        <div className="absolute inset-0">
-          <div className="absolute top-20 left-10 w-4 h-4 bg-primary-400 rounded-full float-animation opacity-60"></div>
-          <div className="absolute top-40 right-20 w-6 h-6 bg-blue-400 rounded-full float-animation opacity-40" style={{animationDelay: '1s'}}></div>
-          <div className="absolute bottom-20 left-1/4 w-3 h-3 bg-purple-400 rounded-full float-animation opacity-50" style={{animationDelay: '2s'}}></div>
-          <div className="absolute top-1/2 right-1/3 w-5 h-5 bg-cyan-400 rounded-full float-animation opacity-30" style={{animationDelay: '0.5s'}}></div>
-        </div>
+        <SimpleFloatingParticles />
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center">
-            <div className="mx-auto w-24 h-24 bg-primary-600 rounded-full flex items-center justify-center mb-8 glow-effect">
+            <SimpleAnimatedElement 
+              animationType="scaleIn" 
+              delay={0.2}
+              className="mx-auto w-24 h-24 bg-primary-600 rounded-full flex items-center justify-center mb-8 glow-effect"
+            >
               <img
                 src={author.avatar}
                 alt={author.name}
                 className="w-20 h-20 rounded-full object-cover"
               />
-            </div>
+            </SimpleAnimatedElement>
             
-            <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 slide-in-up">
+            <SimpleTextReveal 
+              delay={0.5}
+              className="text-4xl md:text-6xl font-bold text-white mb-6"
+            >
               <span className="text-gradient">你好，我是 {author.name}</span>
-            </h1>
+            </SimpleTextReveal>
             
-            <p className="text-xl text-white/90 mb-8 max-w-3xl mx-auto fade-in" style={{animationDelay: '0.3s'}}>
+            <SimpleAnimatedElement 
+              animationType="slideUp" 
+              delay={0.8}
+              className="text-xl text-white/90 mb-8 max-w-3xl mx-auto"
+            >
               专注于前端开发，熟练掌握HTML、CSS、JavaScript、Vue、React等技术，擅长构建交互式的Web应用。
               具备跨平台开发经验，包括Electron桌面应用和微信小程序的开发。
-            </p>
+            </SimpleAnimatedElement>
             
-            <div className="flex justify-center space-x-4 mb-8 fade-in" style={{animationDelay: '0.6s'}}>
-              {socialLinks.map(({ icon: Icon, href, label }, index) => (
-                <a
+            <SimpleStaggeredContainer 
+              stagger={0.1}
+              animationType="scaleIn"
+              className="flex justify-center space-x-4 mb-8"
+            >
+              {socialLinks.map(({ icon: Icon, href, label }) => (
+                <SimpleMagneticButton
                   key={label}
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
                   className="p-3 rounded-lg glass-effect hover-lift btn-animated"
-                  aria-label={label}
-                  style={{animationDelay: `${0.8 + index * 0.1}s`}}
+                  onClick={() => window.open(href, '_blank')}
                 >
                   <Icon className="w-6 h-6 text-white" />
-                </a>
+                </SimpleMagneticButton>
               ))}
-            </div>
+            </SimpleStaggeredContainer>
             
-            <div className="flex flex-col sm:flex-row gap-4 justify-center fade-in" style={{animationDelay: '1s'}}>
-              <Link
-                to="/blog"
-                className="inline-flex items-center px-8 py-4 bg-white text-primary-600 rounded-lg hover:bg-gray-100 transition-all duration-300 btn-animated hover-lift font-semibold text-lg"
-              >
-                阅读博客
-                <ArrowRight className="ml-2 w-5 h-5" />
-              </Link>
-              <Link
-                to="/projects"
-                className="inline-flex items-center px-8 py-4 glass-effect text-white rounded-lg hover:bg-white/20 transition-all duration-300 btn-animated hover-lift font-semibold text-lg"
-              >
-                查看项目
-                <Rocket className="ml-2 w-5 h-5" />
-              </Link>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <SimpleAnimatedElement animationType="slideLeft" delay={1.2}>
+                <SimpleMagneticButton
+                  className="inline-flex items-center px-8 py-4 bg-white text-primary-600 rounded-lg hover:bg-gray-100 transition-all duration-300 btn-animated hover-lift font-semibold text-lg"
+                  onClick={() => window.location.href = '/blog'}
+                >
+                  阅读博客
+                  <ArrowRight className="ml-2 w-5 h-5" />
+                </SimpleMagneticButton>
+              </SimpleAnimatedElement>
+              
+              <SimpleAnimatedElement animationType="slideRight" delay={1.4}>
+                <SimpleMagneticButton
+                  className="inline-flex items-center px-8 py-4 glass-effect text-white rounded-lg hover:bg-white/20 transition-all duration-300 btn-animated hover-lift font-semibold text-lg"
+                  onClick={() => window.location.href = '/projects'}
+                >
+                  查看项目
+                  <Rocket className="ml-2 w-5 h-5" />
+                </SimpleMagneticButton>
+              </SimpleAnimatedElement>
             </div>
           </div>
         </div>
       </section>
 
       {/* About Me Section */}
-      <section className="py-20 bg-white/50 backdrop-blur-sm">
+      <section className="py-20 bg-white/50 backdrop-blur-sm overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
+          <SimpleAnimatedElement 
+            animationType="scaleIn" 
+            className="text-center mb-12"
+          >
             <div className="inline-flex items-center space-x-2 mb-4">
               <Sparkles className="w-6 h-6 text-primary-600" />
               <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
@@ -102,29 +122,33 @@ export default function Home() {
               </h2>
               <Sparkles className="w-6 h-6 text-primary-600" />
             </div>
-          </div>
+          </SimpleAnimatedElement>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div className="space-y-6">
+            <SimpleStaggeredContainer 
+              stagger={0.2}
+              animationType="slideLeft"
+              className="space-y-6"
+            >
               <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl p-6 shadow-lg hover-lift">
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
                   <Rocket className="w-5 h-5 mr-2 text-primary-600" />
                   专业技能
                 </h3>
                 <ul className="space-y-3 text-gray-600 dark:text-gray-300">
-                  <li className="flex items-center slide-in-up" style={{animationDelay: '0.1s'}}>
+                  <li className="flex items-center">
                     <span className="w-2 h-2 bg-primary-600 rounded-full mr-3"></span>
                     专注于前端开发，熟练掌握HTML、CSS、JavaScript、Vue、React等技术
                   </li>
-                  <li className="flex items-center slide-in-up" style={{animationDelay: '0.2s'}}>
+                  <li className="flex items-center">
                     <span className="w-2 h-2 bg-primary-600 rounded-full mr-3"></span>
                     具备跨平台开发经验，包括Electron桌面应用和微信小程序开发
                   </li>
-                  <li className="flex items-center slide-in-up" style={{animationDelay: '0.3s'}}>
+                  <li className="flex items-center">
                     <span className="w-2 h-2 bg-primary-600 rounded-full mr-3"></span>
                     正在深入学习React Native和Node.js，探索全栈开发
                   </li>
-                  <li className="flex items-center slide-in-up" style={{animationDelay: '0.4s'}}>
+                  <li className="flex items-center">
                     <span className="w-2 h-2 bg-primary-600 rounded-full mr-3"></span>
                     有SSH连接桌面应用和远程桌面控制应用的开发经验
                   </li>
@@ -137,23 +161,27 @@ export default function Home() {
                   持续学习
                 </h3>
                 <ul className="space-y-3 text-gray-600 dark:text-gray-300">
-                  <li className="flex items-center slide-in-up" style={{animationDelay: '0.5s'}}>
+                  <li className="flex items-center">
                     <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
                     React Native：深入理解跨平台移动应用开发
                   </li>
-                  <li className="flex items-center slide-in-up" style={{animationDelay: '0.6s'}}>
+                  <li className="flex items-center">
                     <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
                     Node.js全栈开发：学习后端API搭建和数据库集成
                   </li>
-                  <li className="flex items-center slide-in-up" style={{animationDelay: '0.7s'}}>
+                  <li className="flex items-center">
                     <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
                     WebRTC：已在项目中集成实现跨设备通信和屏幕共享
                   </li>
                 </ul>
               </div>
-            </div>
+            </SimpleStaggeredContainer>
             
-            <div className="space-y-6">
+            <SimpleStaggeredContainer 
+              stagger={0.2}
+              animationType="slideRight"
+              className="space-y-6"
+            >
               <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl p-6 shadow-lg hover-lift">
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
                   <Code className="w-5 h-5 mr-2 text-primary-600" />
@@ -170,7 +198,7 @@ export default function Home() {
                         {stack.skills.map((skill) => (
                           <span
                             key={skill}
-                            className="px-3 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full text-sm hover-lift"
+                            className="px-3 py-1 bg-primary-100 dark:bg-primary-900 text-primary-800 dark:text-primary-200 rounded-full text-sm"
                           >
                             {skill}
                           </span>
@@ -183,120 +211,167 @@ export default function Home() {
               
               <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl p-6 shadow-lg hover-lift">
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-                  <Monitor className="w-5 h-5 mr-2 text-primary-600" />
-                  开发工具
+                  <Database className="w-5 h-5 mr-2 text-primary-600" />
+                  项目经验
                 </h3>
-                <div className="grid grid-cols-2 gap-2 text-sm text-gray-600 dark:text-gray-300">
-                  <div className="slide-in-up" style={{animationDelay: '0.1s'}}>• Visual Studio Code</div>
-                  <div className="slide-in-up" style={{animationDelay: '0.2s'}}>• Git & GitHub</div>
-                  <div className="slide-in-up" style={{animationDelay: '0.3s'}}>• Trello, Notion</div>
-                  <div className="slide-in-up" style={{animationDelay: '0.4s'}}>• Docker（学习中）</div>
-                  <div className="slide-in-up" style={{animationDelay: '0.5s'}}>• GitHub Actions</div>
-                </div>
+                <ul className="space-y-3 text-gray-600 dark:text-gray-300">
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-green-500 rounded-full mr-3"></span>
+                    开发了多个Vue和React项目，包括电商平台和后台管理系统
+                  </li>
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-green-500 rounded-full mr-3"></span>
+                    使用Electron开发了桌面应用，集成SSH连接和远程控制功能
+                  </li>
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-green-500 rounded-full mr-3"></span>
+                    开发了微信小程序，实现用户管理和数据统计功能
+                  </li>
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-green-500 rounded-full mr-3"></span>
+                    正在开发React Native应用，探索移动端开发新领域
+                  </li>
+                </ul>
               </div>
-            </div>
+            </SimpleStaggeredContainer>
           </div>
         </div>
       </section>
 
-      {/* Featured Posts Section */}
-      <section className="py-20 bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
+      {/* Featured Blog Posts */}
+      <section className="py-20 bg-gray-50 dark:bg-gray-900 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
+          <SimpleAnimatedElement 
+            animationType="scaleIn" 
+            className="text-center mb-12"
+          >
             <div className="inline-flex items-center space-x-2 mb-4">
               <Sparkles className="w-6 h-6 text-primary-600" />
               <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-                精选文章
+                精选博客
               </h2>
               <Sparkles className="w-6 h-6 text-primary-600" />
             </div>
-            <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-              分享我在前端开发、React、TypeScript等方面的经验和见解
+            <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+              分享我的技术心得、学习笔记和项目经验
             </p>
-          </div>
+          </SimpleAnimatedElement>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-            {featuredPosts.map((post, index) => (
-              <div key={post.id} className="slide-in-up" style={{animationDelay: `${index * 0.2}s`}}>
-                <BlogCard post={post} featured={post.featured} />
-              </div>
+          <SimpleStaggeredContainer 
+            stagger={0.2}
+            animationType="slideUp"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+          >
+            {featuredPosts.map((post) => (
+              <BlogCard key={post.id} post={post} />
             ))}
-          </div>
+          </SimpleStaggeredContainer>
           
-          <div className="text-center">
+          <SimpleAnimatedElement 
+            animationType="slideUp" 
+            delay={0.6}
+            className="text-center mt-12"
+          >
             <Link
               to="/blog"
-              className="inline-flex items-center px-8 py-4 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-all duration-300 btn-animated hover-lift font-semibold"
+              className="inline-flex items-center px-8 py-4 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-all duration-300 btn-animated hover-lift font-semibold text-lg"
             >
-              查看所有文章
+              查看更多文章
               <ArrowRight className="ml-2 w-5 h-5" />
             </Link>
-          </div>
+          </SimpleAnimatedElement>
         </div>
       </section>
 
-      {/* Featured Projects Section */}
-      <section className="py-20 particles bg-white/50 backdrop-blur-sm">
+      {/* Featured Projects */}
+      <section className="py-20 bg-white dark:bg-gray-800 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
+          <SimpleAnimatedElement 
+            animationType="scaleIn" 
+            className="text-center mb-12"
+          >
             <div className="inline-flex items-center space-x-2 mb-4">
-              <Zap className="w-6 h-6 text-primary-600" />
+              <Rocket className="w-6 h-6 text-primary-600" />
               <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
                 精选项目
               </h2>
-              <Zap className="w-6 h-6 text-primary-600" />
+              <Rocket className="w-6 h-6 text-primary-600" />
             </div>
-            <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-              展示我的一些开源项目和技术实践
+            <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+              展示我的技术能力和项目成果
             </p>
-          </div>
+          </SimpleAnimatedElement>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-            {featuredProjects.map((project, index) => (
-              <div key={project.id} className="slide-in-up" style={{animationDelay: `${index * 0.2}s`}}>
-                <ProjectCard project={project} />
-              </div>
+          <SimpleStaggeredContainer 
+            stagger={0.2}
+            animationType="slideUp"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+          >
+            {featuredProjects.map((project) => (
+              <ProjectCard key={project.id} project={project} />
             ))}
-          </div>
+          </SimpleStaggeredContainer>
           
-          <div className="text-center">
+          <SimpleAnimatedElement 
+            animationType="slideUp" 
+            delay={0.6}
+            className="text-center mt-12"
+          >
             <Link
               to="/projects"
-              className="inline-flex items-center px-8 py-4 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-all duration-300 btn-animated hover-lift font-semibold"
+              className="inline-flex items-center px-8 py-4 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-all duration-300 btn-animated hover-lift font-semibold text-lg"
             >
-              查看所有项目
+              查看更多项目
               <ArrowRight className="ml-2 w-5 h-5" />
             </Link>
-          </div>
+          </SimpleAnimatedElement>
         </div>
       </section>
 
-      {/* Call to Action */}
-      <section className="py-20 gradient-bg">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-4xl font-bold mb-6">
-            <span className="text-white">让我们一起创造</span>
-            <span className="text-gradient"> 精彩的作品</span>
-          </h2>
-          <p className="text-xl text-white/90 mb-8">
-            如果您对我的工作感兴趣，或者想要合作，欢迎随时联系我
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              to="/about"
-              className="inline-flex items-center px-8 py-4 bg-white text-primary-600 rounded-lg hover:bg-gray-100 transition-all duration-300 btn-animated hover-lift font-semibold"
-            >
-              了解更多
-              <ArrowRight className="ml-2 w-5 h-5" />
-            </Link>
-            <a
-              href={`mailto:${author.social.email}`}
-              className="inline-flex items-center px-8 py-4 glass-effect text-white rounded-lg hover:bg-white/20 transition-all duration-300 btn-animated hover-lift font-semibold"
-            >
+      {/* Contact Section */}
+      <section className="py-20 gradient-bg relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <SimpleAnimatedElement 
+            animationType="scaleIn" 
+            className="text-center mb-12"
+          >
+            <h2 className="text-3xl font-bold text-white mb-4">
               联系我
+            </h2>
+            <p className="text-xl text-white/90 max-w-2xl mx-auto">
+              如果您对我的项目感兴趣，或者想要合作，欢迎随时联系我
+            </p>
+          </SimpleAnimatedElement>
+          
+          <SimpleStaggeredContainer 
+            stagger={0.1}
+            animationType="scaleIn"
+            className="flex justify-center space-x-6"
+          >
+            {socialLinks.map(({ icon: Icon, href, label }) => (
+              <SimpleMagneticButton
+                key={label}
+                className="p-4 rounded-lg glass-effect hover-lift btn-animated"
+                onClick={() => window.open(href, '_blank')}
+              >
+                <Icon className="w-8 h-8 text-white" />
+              </SimpleMagneticButton>
+            ))}
+          </SimpleStaggeredContainer>
+          
+          <SimpleAnimatedElement 
+            animationType="slideUp" 
+            delay={0.8}
+            className="text-center mt-8"
+          >
+            <SimpleMagneticButton
+              className="inline-flex items-center px-8 py-4 bg-white text-primary-600 rounded-lg hover:bg-gray-100 transition-all duration-300 btn-animated hover-lift font-semibold text-lg"
+              onClick={() => window.open(`mailto:${author.social.email}`, '_blank')}
+            >
+              发送邮件
               <Mail className="ml-2 w-5 h-5" />
-            </a>
-          </div>
+            </SimpleMagneticButton>
+          </SimpleAnimatedElement>
         </div>
       </section>
     </div>

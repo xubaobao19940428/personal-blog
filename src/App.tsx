@@ -7,6 +7,7 @@ import Blog from './pages/Blog';
 import BlogPost from './pages/BlogPost';
 import Projects from './pages/Projects';
 import About from './pages/About';
+import { configureGSAP } from './utils/animationUtils';
 // import ThemeTest from './components/ThemeTest';
 
 function App() {
@@ -16,6 +17,9 @@ function App() {
   });
 
   useEffect(() => {
+    // 初始化GSAP配置
+    configureGSAP();
+    
     if (isDark) {
       document.documentElement.classList.add('dark');
       localStorage.setItem('theme', 'dark');
@@ -31,9 +35,9 @@ function App() {
 
   return (
     <Router>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 overflow-x-hidden">
         <Header isDark={isDark} toggleTheme={toggleTheme} />
-        <main>
+        <main className="overflow-x-hidden">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/blog" element={<Blog />} />

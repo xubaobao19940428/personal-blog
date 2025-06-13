@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 全局overflow控制 */
+html, body {
+  overflow-x: hidden;
+}
+
 /* 自定义颜色 */
 :root {
   --primary-50: #eff6ff;
@@ -37,6 +42,96 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* 轻量级动画类 */
+.animate-in {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+.animate-fade-in {
+  opacity: 0;
+}
+
+.animate-slide-up {
+  opacity: 0;
+  transform: translateY(2rem);
+}
+
+.animate-slide-left {
+  opacity: 0;
+  transform: translateX(-2rem);
+}
+
+.animate-slide-right {
+  opacity: 0;
+  transform: translateX(2rem);
+}
+
+.animate-scale-in {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+.animate-text-reveal {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+}
+
+/* 浮动动画 */
+.animate-float-1 {
+  animation: float1 4s ease-in-out infinite;
+}
+
+.animate-float-2 {
+  animation: float2 5s ease-in-out infinite;
+}
+
+.animate-float-3 {
+  animation: float3 6s ease-in-out infinite;
+}
+
+.animate-float-4 {
+  animation: float4 4.5s ease-in-out infinite;
+}
+
+.animate-float-5 {
+  animation: float5 5.5s ease-in-out infinite;
+}
+
+.animate-float-6 {
+  animation: float6 3.5s ease-in-out infinite;
+}
+
+@keyframes float1 {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes float2 {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-15px); }
+}
+
+@keyframes float3 {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes float4 {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes float5 {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes float6 {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-14px); }
+}
+
 /* 渐变背景 */
 .gradient-bg {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -58,14 +153,13 @@ body {
     rgba(255, 154, 0, 0.8) 75%, 
     rgba(255, 206, 84, 0.8) 100%);
   background-size: 400% 400%;
-  animation: gradientShift 8s ease infinite;
+  animation: gradientShift 8s ease-in-out infinite;
   z-index: 1;
 }
 
 @keyframes gradientShift {
-  0% { background-position: 0% 50%; }
+  0%, 100% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
 }
 
 /* 深色模式渐变 */
@@ -79,7 +173,7 @@ body {
   background-size: 400% 400%;
 }
 
-/* 粒子背景 */
+/* 粒子背景 - 简化 */
 .particles {
   position: relative;
 }
@@ -95,85 +189,20 @@ body {
     radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
     radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
     radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.3) 0%, transparent 50%);
-  animation: particleFloat 20s ease-in-out infinite;
   z-index: 2;
 }
 
-/* 动态粒子 */
-.particles::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: 
-    radial-gradient(2px 2px at 20px 30px, rgba(255, 255, 255, 0.8), transparent),
-    radial-gradient(2px 2px at 40px 70px, rgba(255, 255, 255, 0.6), transparent),
-    radial-gradient(1px 1px at 90px 40px, rgba(255, 255, 255, 0.9), transparent),
-    radial-gradient(1px 1px at 130px 80px, rgba(255, 255, 255, 0.7), transparent),
-    radial-gradient(2px 2px at 160px 30px, rgba(255, 255, 255, 0.8), transparent);
-  background-repeat: repeat;
-  background-size: 200px 100px;
-  animation: particleMove 15s linear infinite;
-  z-index: 3;
-}
-
-@keyframes particleFloat {
-  0%, 100% { 
-    transform: translateY(0px) rotate(0deg);
-    opacity: 0.7;
-  }
-  25% { 
-    transform: translateY(-20px) rotate(90deg);
-    opacity: 0.9;
-  }
-  50% { 
-    transform: translateY(-10px) rotate(180deg);
-    opacity: 0.5;
-  }
-  75% { 
-    transform: translateY(-30px) rotate(270deg);
-    opacity: 0.8;
-  }
-}
-
-@keyframes particleMove {
-  0% { transform: translateX(0px) translateY(0px); }
-  100% { transform: translateX(-200px) translateY(-100px); }
-}
-
-/* 深色模式粒子 */
-.dark .particles::after {
-  background-image: 
-    radial-gradient(2px 2px at 20px 30px, rgba(148, 163, 184, 0.6), transparent),
-    radial-gradient(2px 2px at 40px 70px, rgba(148, 163, 184, 0.4), transparent),
-    radial-gradient(1px 1px at 90px 40px, rgba(148, 163, 184, 0.7), transparent),
-    radial-gradient(1px 1px at 130px 80px, rgba(148, 163, 184, 0.5), transparent),
-    radial-gradient(2px 2px at 160px 30px, rgba(148, 163, 184, 0.6), transparent);
-}
-
-/* 浮动动画 */
+/* 浮动动画 - 简化 */
 .float-animation {
-  animation: float 6s ease-in-out infinite;
+  animation: float 4s ease-in-out infinite;
 }
 
 @keyframes float {
-  0%, 100% { 
-    transform: translateY(0px) rotate(0deg);
-  }
-  25% { 
-    transform: translateY(-20px) rotate(5deg);
-  }
-  50% { 
-    transform: translateY(-10px) rotate(-3deg);
-  }
-  75% { 
-    transform: translateY(-30px) rotate(2deg);
-  }
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
 }
 
-/* 发光效果 */
+/* 发光效果 - 简化 */
 .glow-effect {
   box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
   animation: glow 2s ease-in-out infinite alternate;
@@ -181,7 +210,7 @@ body {
 
 @keyframes glow {
   from { box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
-  to { box-shadow: 0 0 30px rgba(59, 130, 246, 0.8), 0 0 40px rgba(59, 130, 246, 0.3); }
+  to { box-shadow: 0 0 30px rgba(59, 130, 246, 0.8); }
 }
 
 /* 玻璃拟态效果 */
@@ -196,20 +225,21 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* 悬停提升效果 */
+/* 悬停提升效果 - 简化 */
 .hover-lift {
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .hover-lift:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
 }
 
-/* 按钮动画 */
+/* 按钮动画 - 简化 */
 .btn-animated {
   position: relative;
   overflow: hidden;
+  transition: all 0.3s ease;
 }
 
 .btn-animated::before {
@@ -220,7 +250,7 @@ body {
   width: 100%;
   height: 100%;
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.5s;
+  transition: left 0.5s ease;
 }
 
 .btn-animated:hover::before {
@@ -230,53 +260,51 @@ body {
 /* 文字渐变 */
 .text-gradient {
   background: linear-gradient(45deg, #667eea, #764ba2, #f093fb, #f5576c);
-  background-size: 300% 300%;
+  background-size: 400% 400%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  animation: textGradient 3s ease infinite;
+  animation: textGradient 3s ease-in-out infinite;
 }
 
 @keyframes textGradient {
-  0% { background-position: 0% 50%; }
+  0%, 100% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
 }
 
-/* 滑入动画 */
+/* 滑入动画 - 简化 */
 .slide-in-up {
-  animation: slideInUp 0.8s ease-out forwards;
-  opacity: 0;
-  transform: translateY(30px);
+  animation: slideInUp 0.6s ease-out forwards;
 }
 
 @keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
-/* 淡入动画 */
+/* 淡入动画 - 简化 */
 .fade-in {
-  animation: fadeIn 1s ease-out forwards;
-  opacity: 0;
+  animation: fadeIn 0.6s ease-out forwards;
 }
 
 @keyframes fadeIn {
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-/* 深色模式适配 */
+/* 深色模式文字渐变 */
 .dark .text-gradient {
-  background: linear-gradient(45deg, #93c5fd, #c4b5fd, #f9a8d4, #fca5a5);
-  background-size: 300% 300%;
+  background: linear-gradient(45deg, #60a5fa, #a78bfa, #f472b6, #fb7185);
+  background-size: 400% 400%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  animation: textGradient 3s ease infinite;
 }
 
 /* 滚动条样式 */
@@ -311,35 +339,35 @@ body {
 
 /* Markdown 样式 */
 .prose {
-  @apply max-w-none;
+  max-width: none;
 }
 
 .prose h1 {
-  @apply text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6;
+  @apply text-3xl font-bold mb-4;
 }
 
 .prose h2 {
-  @apply text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-4 mt-8;
+  @apply text-2xl font-semibold mb-3;
 }
 
 .prose h3 {
-  @apply text-xl font-semibold text-gray-800 dark:text-gray-200 mb-3 mt-6;
+  @apply text-xl font-medium mb-2;
 }
 
 .prose p {
-  @apply text-gray-700 dark:text-gray-300 mb-4 leading-relaxed;
+  @apply mb-4 leading-relaxed;
 }
 
 .prose code {
-  @apply bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-sm font-mono;
+  @apply bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-sm;
 }
 
 .prose pre {
-  @apply bg-gray-900 dark:bg-gray-800 p-4 rounded-lg overflow-x-auto mb-4;
+  @apply bg-gray-100 dark:bg-gray-800 p-4 rounded-lg overflow-x-auto;
 }
 
 .prose pre code {
-  @apply bg-transparent p-0 text-gray-100;
+  @apply bg-transparent p-0;
 }
 
 .prose ul {
@@ -351,13 +379,13 @@ body {
 }
 
 .prose li {
-  @apply text-gray-700 dark:text-gray-300 mb-1;
+  @apply mb-1;
 }
 
 .prose blockquote {
-  @apply border-l-4 border-primary-500 pl-4 italic text-gray-600 dark:text-gray-400 mb-4;
+  @apply border-l-4 border-primary-500 pl-4 italic my-4;
 }
 
 .prose a {
-  @apply text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 underline;
+  @apply text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300;
 } 
