@@ -1,15 +1,37 @@
-import { Github, Twitter, Linkedin, Mail } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Github, Twitter, Linkedin, Mail, Heart, Code, Coffee, Sparkles, Zap, Globe, Shield, Users } from 'lucide-react';
 import { author } from '../data/author';
 
 export default function Footer() {
     const currentYear = new Date().getFullYear();
 
     const socialLinks = [
-        { icon: Github, href: author.social.github, label: 'GitHub' },
-        { icon: Twitter, href: author.social.twitter, label: 'Twitter' },
-        { icon: Linkedin, href: author.social.linkedin, label: 'LinkedIn' },
-        { icon: Mail, href: `mailto:${author.social.email}`, label: 'Email' },
+        { icon: Github, href: author.social.github, label: 'GitHub', color: 'hover:bg-gray-800' },
+        { icon: Twitter, href: author.social.twitter, label: 'Twitter', color: 'hover:bg-blue-500' },
+        { icon: Linkedin, href: author.social.linkedin, label: 'LinkedIn', color: 'hover:bg-blue-700' },
+        { icon: Mail, href: `mailto:${author.social.email}`, label: 'Email', color: 'hover:bg-red-500' },
     ].filter(link => link.href);
+
+    const quickLinks = [
+        { name: '首页', href: '/' },
+        { name: '博客', href: '/blog' },
+        { name: '项目', href: '/projects' },
+        { name: '关于', href: '/about' },
+    ];
+
+    const services = [
+        { name: '前端开发', description: 'React、Vue、TypeScript' },
+        { name: '跨平台开发', description: 'Electron、微信小程序' },
+        { name: '性能优化', description: '用户体验提升' },
+        { name: '技术咨询', description: '前端技术指导' },
+    ];
+
+    const stats = [
+        { icon: Code, label: '7年经验', value: '7+' },
+        { icon: Users, label: '服务用户', value: '100万+' },
+        { icon: Globe, label: '项目数量', value: '20+' },
+        { icon: Shield, label: '技术专家', value: '专家' },
+    ];
 
     return (
         <footer className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">

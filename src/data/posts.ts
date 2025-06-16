@@ -210,11 +210,15 @@ CSS 变量让样式更加灵活：
   {
     id: '4',
     title: 'Vue.js 响应式原理深度解析',
-    excerpt: '深入理解Vue.js的响应式系统，从数据劫持到发布订阅模式的完整实现。',
+    excerpt: '深入理解Vue.js的响应式系统，从数据劫持到发布订阅模式的完整实现，包含源码解读和实际应用。',
     content: `
 # Vue.js 响应式原理深度解析
 
-Vue.js 的响应式系统是其核心特性之一，让我们深入理解其实现原理。
+Vue.js 的响应式系统是其核心特性之一，它通过数据劫持和发布订阅模式实现了高效的数据驱动视图更新机制。本文将深入探讨Vue.js响应式系统的实现原理，并通过源码解读来理解其内部工作机制。
+
+## 什么是响应式系统？
+
+响应式系统是指当数据发生变化时，能够自动更新相关的视图或执行相应的操作。在Vue.js中，当我们修改数据时，相关的DOM会自动更新，这就是响应式系统的体现。
 
 ## 响应式系统的三种实现方式
 
@@ -234,6 +238,9 @@ vm.set('property', value);
 vm.property = value;
 \`\`\`
 
+**优点**：实现简单，容易理解
+**缺点**：需要手动调用setter方法，不够直观
+
 ### 2. 脏值检查（Angular.js）
 
 Angular.js 通过脏值检测的方式比对数据是否有变更：
@@ -252,63 +259,857 @@ Angular 在以下事件触发时进入脏值检测：
 - Timer 事件（$timeout, $interval）
 - 执行 $digest() 或 $apply()
 
+**优点**：可以检测到任何数据变化
+**缺点**：性能较差，需要遍历所有数据
+
 ### 3. 数据劫持（Vue.js）
 
-Vue.js 采用数据劫持结合发布者-订阅者模式的方式：
+Vue.js 采用数据劫持结合发布者-订阅者模式的方式，这也是最优雅的解决方案。
 
-#### Vue 2.0 实现
+## Vue 2.0 响应式实现原理
 
-通过 Object.defineProperty() 来劫持各个属性的 setter、getter：
+### 核心概念
+
+Vue 2.0 的响应式系统主要包含以下几个核心概念：
+
+1. **Observer（观察者）**：负责数据劫持，将数据对象转换为响应式对象
+2. **Dep（依赖收集器）**：负责收集依赖，当数据变化时通知订阅者
+3. **Watcher（订阅者）**：负责订阅数据变化，执行相应的更新操作
+
+### 源码实现
+
+#### 1. Observer 类实现
 
 \`\`\`javascript
-Object.defineProperty(obj, key, {
+// 简化版的 Observer 实现
+class Observer {
+  constructor(value) {
+    this.value = value;
+    this.dep = new Dep();
+    
+    // 标记对象已经被观察
+    def(value, '__ob__', this);
+    
+    if (Array.isArray(value)) {
+      // 数组的响应式处理
+      this.observeArray(value);
+    } else {
+      // 对象的响应式处理
+      this.walk(value);
+    }
+  }
+  
+  walk(obj) {
+    const keys = Object.keys(obj);
+    for (let i = 0; i < keys.length; i++) {
+      defineReactive(obj, keys[i], obj[keys[i]]);
+    }
+  }
+  
+  observeArray(items) {
+    for (let i = 0, l = items.length; i < l; i++) {
+      observe(items[i]);
+    }
+  }
+}
+
+// 将对象转换为响应式对象
+function observe(value) {
+  if (!isObject(value) || value instanceof VNode) {
+    return;
+  }
+  
+  let ob;
+  if (hasOwn(value, '__ob__') && value.__ob__ instanceof Observer) {
+    ob = value.__ob__;
+  } else if (
+    (Array.isArray(value) || isPlainObject(value)) &&
+    Object.isExtensible(value)
+  ) {
+    ob = new Observer(value);
+  }
+  return ob;
+}
+\`\`\`
+
+#### 2. defineReactive 函数实现
+
+\`\`\`javascript
+// 核心：数据劫持实现
+function defineReactive(obj, key, val) {
+  // 为每个属性创建一个依赖收集器
+  const dep = new Dep();
+  
+  // 获取属性描述符
+  const property = Object.getOwnPropertyDescriptor(obj, key);
+  const getter = property && property.get;
+  const setter = property && property.set;
+  
+  // 如果值是对象，递归观察
+  let childOb = observe(val);
+  
+  Object.defineProperty(obj, key, {
+    enumerable: true,
+    configurable: true,
+    get() {
+      const value = getter ? getter.call(obj) : val;
+      
+      // 依赖收集
+      if (Dep.target) {
+        dep.depend();
+        if (childOb) {
+          childOb.dep.depend();
+          if (Array.isArray(value)) {
+            dependArray(value);
+          }
+        }
+      }
+      
+      return value;
+    },
+    set(newVal) {
+      const value = getter ? getter.call(obj) : val;
+      
+      // 避免重复设置相同的值
+      if (newVal === value || (newVal !== newVal && value !== value)) {
+        return;
+      }
+      
+      if (setter) {
+        setter.call(obj, newVal);
+      } else {
+        val = newVal;
+      }
+      
+      // 新值也需要观察
+      childOb = observe(newVal);
+      
+      // 通知订阅者更新
+      dep.notify();
+    }
+  });
+}
+\`\`\`
+
+#### 3. Dep 类实现
+
+\`\`\`javascript
+// 依赖收集器
+class Dep {
+  constructor() {
+    this.subs = [];
+  }
+  
+  addSub(sub) {
+    this.subs.push(sub);
+  }
+  
+  removeSub(sub) {
+    remove(this.subs, sub);
+  }
+  
+  depend() {
+    if (Dep.target) {
+      Dep.target.addDep(this);
+    }
+  }
+  
+  notify() {
+    // 稳定排序订阅者
+    const subs = this.subs.slice();
+    for (let i = 0, l = subs.length; i < l; i++) {
+      subs[i].update();
+    }
+  }
+}
+
+// 全局的当前正在执行的 watcher
+Dep.target = null;
+const targetStack = [];
+
+function pushTarget(target) {
+  if (Dep.target) targetStack.push(Dep.target);
+  Dep.target = target;
+}
+
+function popTarget() {
+  Dep.target = targetStack.pop();
+}
+\`\`\`
+
+#### 4. Watcher 类实现
+
+\`\`\`javascript
+// 订阅者
+class Watcher {
+  constructor(vm, expOrFn, cb, options) {
+    this.vm = vm;
+    this.cb = cb;
+    this.deps = [];
+    this.newDeps = [];
+    this.depIds = new Set();
+    this.newDepIds = new Set();
+    
+    if (typeof expOrFn === 'function') {
+      this.getter = expOrFn;
+    } else {
+      this.getter = parsePath(expOrFn);
+    }
+    
+    this.value = this.get();
+  }
+  
   get() {
-    // 依赖收集
+    pushTarget(this);
+    let value;
+    const vm = this.vm;
+    
+    try {
+      value = this.getter.call(vm, vm);
+    } catch (e) {
+      throw e;
+    } finally {
+      popTarget();
+      this.cleanupDeps();
+    }
+    
     return value;
-  },
-  set(newVal) {
-    if (newVal === value) return;
-    value = newVal;
-    // 通知订阅者更新
-    dep.notify();
   }
-});
+  
+  addDep(dep) {
+    const id = dep.id;
+    if (!this.newDepIds.has(id)) {
+      this.newDepIds.add(id);
+      this.newDeps.push(dep);
+      if (!this.depIds.has(id)) {
+        dep.addSub(this);
+      }
+    }
+  }
+  
+  cleanupDeps() {
+    let i = this.deps.length;
+    while (i--) {
+      const dep = this.deps[i];
+      if (!this.newDepIds.has(dep.id)) {
+        dep.removeSub(this);
+      }
+    }
+    
+    let tmp = this.depIds;
+    this.depIds = this.newDepIds;
+    this.newDepIds = tmp;
+    this.newDepIds.clear();
+    
+    tmp = this.deps;
+    this.deps = this.newDeps;
+    this.newDeps = tmp;
+    this.newDeps.length = 0;
+  }
+  
+  update() {
+    if (this.lazy) {
+      this.dirty = true;
+    } else if (this.sync) {
+      this.run();
+    } else {
+      queueWatcher(this);
+    }
+  }
+  
+  run() {
+    const value = this.get();
+    const oldValue = this.value;
+    this.value = value;
+    
+    if (this.user) {
+      try {
+        this.cb.call(this.vm, value, oldValue);
+      } catch (e) {
+        handleError(e, this.vm, \`callback for watcher "\${this.expression}"\`);
+      }
+    } else {
+      this.cb.call(this.vm, value, oldValue);
+    }
+  }
+}
 \`\`\`
 
-#### Vue 3.0 改进
+### 数组响应式处理
 
-Vue 3.0 采用 Proxy 的方式，性能更好：
+Vue 2.0 对数组的响应式处理比较特殊，因为 Object.defineProperty 无法监听数组索引和长度的变化：
 
 \`\`\`javascript
-const proxy = new Proxy(target, {
-  get(target, key, receiver) {
-    // 依赖收集
-    track(target, key);
-    return Reflect.get(target, key, receiver);
-  },
-  set(target, key, value, receiver) {
-    const result = Reflect.set(target, key, value, receiver);
-    // 触发更新
-    trigger(target, key);
+// 数组方法重写
+const arrayProto = Array.prototype;
+const arrayMethods = Object.create(arrayProto);
+
+const methodsToPatch = [
+  'push',
+  'pop',
+  'shift',
+  'unshift',
+  'splice',
+  'sort',
+  'reverse'
+];
+
+methodsToPatch.forEach(function (method) {
+  const original = arrayProto[method];
+  def(arrayMethods, method, function mutator(...args) {
+    const result = original.apply(this, args);
+    const ob = this.__ob__;
+    let inserted;
+    
+    switch (method) {
+      case 'push':
+      case 'unshift':
+        inserted = args;
+        break;
+      case 'splice':
+        inserted = args.slice(2);
+        break;
+    }
+    
+    if (inserted) ob.observeArray(inserted);
+    
+    // 通知更新
+    ob.dep.notify();
     return result;
+  });
+});
+
+// 在 Observer 中应用
+function observeArray(items) {
+  for (let i = 0, l = items.length; i < l; i++) {
+    observe(items[i]);
   }
+  // 重写数组方法
+  items.__proto__ = arrayMethods;
+}
+\`\`\`
+
+## Vue 3.0 响应式实现原理
+
+Vue 3.0 使用 Proxy 替代 Object.defineProperty，解决了 Vue 2.0 中的一些限制。
+
+### Proxy 的优势
+
+1. **可以监听数组索引和长度变化**
+2. **可以监听对象属性的添加和删除**
+3. **性能更好，不需要递归遍历**
+4. **支持 Map、Set、WeakMap、WeakSet**
+
+### 源码实现
+
+#### 1. reactive 函数实现
+
+\`\`\`javascript
+// Vue 3.0 的 reactive 实现
+function reactive(target) {
+  // 如果不是对象，直接返回
+  if (!isObject(target)) {
+    return target;
+  }
+  
+  // 如果已经是响应式对象，直接返回
+  if (target.__v_isReactive) {
+    return target;
+  }
+  
+  // 创建响应式对象
+  const proxy = new Proxy(target, {
+    get(target, key, receiver) {
+      // 特殊属性处理
+      if (key === '__v_isReactive') {
+        return true;
+      }
+      
+      const result = Reflect.get(target, key, receiver);
+      
+      // 依赖收集
+      track(target, key);
+      
+      // 如果值是对象，递归响应式
+      if (isObject(result)) {
+        return reactive(result);
+      }
+      
+      return result;
+    },
+    
+    set(target, key, value, receiver) {
+      const oldValue = target[key];
+      const result = Reflect.set(target, key, value, receiver);
+      
+      // 如果值发生变化，触发更新
+      if (hasChanged(value, oldValue)) {
+        trigger(target, key, value, oldValue);
+      }
+      
+      return result;
+    },
+    
+    deleteProperty(target, key) {
+      const hadKey = hasOwn(target, key);
+      const result = Reflect.deleteProperty(target, key);
+      
+      if (result && hadKey) {
+        trigger(target, key, undefined, target[key]);
+      }
+      
+      return result;
+    }
+  });
+  
+  return proxy;
+}
+\`\`\`
+
+#### 2. track 和 trigger 函数
+
+\`\`\`javascript
+// 依赖收集
+function track(target, key) {
+  if (!activeEffect) return;
+  
+  let depsMap = targetMap.get(target);
+  if (!depsMap) {
+    targetMap.set(target, (depsMap = new Map()));
+  }
+  
+  let dep = depsMap.get(key);
+  if (!dep) {
+    depsMap.set(key, (dep = new Set()));
+  }
+  
+  if (!dep.has(activeEffect)) {
+    dep.add(activeEffect);
+    activeEffect.deps.push(dep);
+  }
+}
+
+// 触发更新
+function trigger(target, key, newValue, oldValue) {
+  const depsMap = targetMap.get(target);
+  if (!depsMap) return;
+  
+  const effects = new Set();
+  
+  // 收集需要执行的 effect
+  const add = (effectsToAdd) => {
+    if (effectsToAdd) {
+      effectsToAdd.forEach(effect => {
+        if (effect !== activeEffect || effect.allowRecurse) {
+          effects.add(effect);
+        }
+      });
+    }
+  };
+  
+  // 添加相关依赖
+  if (key !== void 0) {
+    add(depsMap.get(key));
+  }
+  
+  // 执行 effect
+  effects.forEach(effect => {
+    if (effect.scheduler) {
+      effect.scheduler();
+    } else {
+      effect.run();
+    }
+  });
+}
+\`\`\`
+
+#### 3. effect 函数实现
+
+\`\`\`javascript
+// Vue 3.0 的 effect 实现
+function effect(fn, options = {}) {
+  const effect = createReactiveEffect(fn, options);
+  
+  if (!options.lazy) {
+    effect();
+  }
+  
+  return effect;
+}
+
+function createReactiveEffect(fn, options) {
+  const effect = function reactiveEffect() {
+    if (!effect.active) {
+      return options.scheduler ? undefined : fn();
+    }
+    
+    if (!effectStack.includes(effect)) {
+      cleanup(effect);
+      try {
+        enableTracking();
+        effectStack.push(effect);
+        activeEffect = effect;
+        return fn();
+      } finally {
+        effectStack.pop();
+        resetTracking();
+        activeEffect = effectStack[effectStack.length - 1];
+      }
+    }
+  };
+  
+  effect.id = uid++;
+  effect.allowRecurse = !!options.allowRecurse;
+  effect._isEffect = true;
+  effect.active = true;
+  effect.raw = fn;
+  effect.deps = [];
+  effect.options = options;
+  
+  return effect;
+}
+\`\`\`
+
+## 响应式系统的性能优化
+
+### 1. 异步更新队列
+
+Vue 使用异步更新队列来优化性能，避免频繁的DOM更新：
+
+\`\`\`javascript
+// 异步更新队列实现
+const queue = [];
+let flushing = false;
+let waiting = false;
+
+function queueWatcher(watcher) {
+  const id = watcher.id;
+  if (has[id] == null) {
+    has[id] = true;
+    if (!flushing) {
+      queue.push(watcher);
+    } else {
+      // 如果正在刷新，找到合适的位置插入
+      let i = queue.length - 1;
+      while (i > index && queue[i].id > watcher.id) {
+        i--;
+      }
+      queue.splice(i + 1, 0, watcher);
+    }
+    
+    if (!waiting) {
+      waiting = true;
+      nextTick(flushSchedulerQueue);
+    }
+  }
+}
+
+function flushSchedulerQueue() {
+  flushing = true;
+  let watcher, id;
+  
+  // 排序，确保父组件在子组件之前更新
+  queue.sort((a, b) => a.id - b.id);
+  
+  for (index = 0; index < queue.length; index++) {
+    watcher = queue[index];
+    id = watcher.id;
+    has[id] = null;
+    watcher.run();
+  }
+  
+  // 重置状态
+  flushing = waiting = false;
+}
+\`\`\`
+
+### 2. 计算属性缓存
+
+计算属性通过缓存机制避免重复计算：
+
+\`\`\`javascript
+// 计算属性实现
+function computed(getter) {
+  let dirty = true;
+  let value;
+  
+  const effect = reactiveEffect(getter, {
+    lazy: true,
+    scheduler: () => {
+      if (!dirty) {
+        dirty = true;
+        trigger(computedRef, 'value');
+      }
+    }
+  });
+  
+  const computedRef = {
+    get value() {
+      if (dirty) {
+        value = effect();
+        dirty = false;
+      }
+      track(computedRef, 'value');
+      return value;
+    }
+  };
+  
+  return computedRef;
+}
+\`\`\`
+
+## 实际应用示例
+
+### 1. 自定义响应式系统
+
+\`\`\`javascript
+// 简单的响应式系统实现
+class SimpleReactive {
+  constructor(data) {
+    this.data = this.observe(data);
+    this.subscribers = new Map();
+  }
+  
+  observe(obj) {
+    const self = this;
+    return new Proxy(obj, {
+      get(target, key) {
+        // 依赖收集
+        if (SimpleReactive.currentEffect) {
+          if (!self.subscribers.has(key)) {
+            self.subscribers.set(key, new Set());
+          }
+          self.subscribers.get(key).add(SimpleReactive.currentEffect);
+        }
+        return target[key];
+      },
+      
+      set(target, key, value) {
+        const oldValue = target[key];
+        target[key] = value;
+        
+        // 触发更新
+        if (self.subscribers.has(key)) {
+          self.subscribers.get(key).forEach(effect => effect());
+        }
+        
+        return true;
+      }
+    });
+  }
+  
+  watch(effect) {
+    SimpleReactive.currentEffect = effect;
+    effect();
+    SimpleReactive.currentEffect = null;
+  }
+}
+
+// 使用示例
+const reactive = new SimpleReactive({
+  name: 'Vue',
+  version: 3
+});
+
+reactive.watch(() => {
+  console.log('数据变化:', reactive.data.name, reactive.data.version);
+});
+
+reactive.data.name = 'React'; // 触发更新
+reactive.data.version = 18;   // 触发更新
+\`\`\`
+
+### 2. 响应式表单验证
+
+\`\`\`javascript
+// 响应式表单验证
+class ReactiveForm {
+  constructor(formData) {
+    this.data = reactive(formData);
+    this.errors = reactive({});
+    this.rules = new Map();
+  }
+  
+  addRule(field, rule) {
+    if (!this.rules.has(field)) {
+      this.rules.set(field, []);
+    }
+    this.rules.get(field).push(rule);
+  }
+  
+  validate() {
+    const errors = {};
+    
+    for (const [field, rules] of this.rules) {
+      const value = this.data[field];
+      
+      for (const rule of rules) {
+        const result = rule(value);
+        if (result !== true) {
+          if (!errors[field]) {
+            errors[field] = [];
+          }
+          errors[field].push(result);
+        }
+      }
+    }
+    
+    this.errors = errors;
+    return Object.keys(errors).length === 0;
+  }
+  
+  watchField(field, callback) {
+    watch(() => this.data[field], callback);
+  }
+}
+
+// 使用示例
+const form = new ReactiveForm({
+  username: '',
+  email: '',
+  password: ''
+});
+
+// 添加验证规则
+form.addRule('username', (value) => {
+  if (!value) return '用户名不能为空';
+  if (value.length < 3) return '用户名至少3个字符';
+  return true;
+});
+
+form.addRule('email', (value) => {
+  if (!value) return '邮箱不能为空';
+  if (!/^[^@]+@[^@]+\\.[^@]+$/.test(value)) return '邮箱格式不正确';
+  return true;
+});
+
+// 监听字段变化
+form.watchField('username', (newValue) => {
+  console.log('用户名变化:', newValue);
+  form.validate();
+});
+
+form.data.username = 'test'; // 触发验证
+\`\`\`
+
+## 常见问题和解决方案
+
+### 1. 对象新增属性不响应
+
+**问题**：Vue 2.0 中，直接给对象添加新属性不会触发响应式更新。
+
+**解决方案**：
+\`\`\`javascript
+// 方法1：使用 Vue.set
+Vue.set(obj, 'newProp', value);
+
+// 方法2：使用 Object.assign
+this.obj = Object.assign({}, this.obj, { newProp: value });
+
+// 方法3：使用展开运算符
+this.obj = { ...this.obj, newProp: value };
+\`\`\`
+
+### 2. 数组索引和长度变化
+
+**问题**：Vue 2.0 中，直接修改数组索引或长度不会触发响应式更新。
+
+**解决方案**：
+\`\`\`javascript
+// 方法1：使用 Vue.set
+Vue.set(arr, index, value);
+
+// 方法2：使用 splice
+arr.splice(index, 1, value);
+
+// 方法3：使用数组方法
+arr.push(value);
+arr.pop();
+arr.splice(index, 1);
+\`\`\`
+
+### 3. 深层对象变化检测
+
+**问题**：深层嵌套对象的变化可能不会被检测到。
+
+**解决方案**：
+\`\`\`javascript
+// 使用 deep watcher
+watch(() => obj.deep.nested.value, (newVal, oldVal) => {
+  console.log('深层数据变化:', newVal, oldVal);
+}, { deep: true });
+
+// 或者使用 JSON.stringify
+watch(() => JSON.stringify(obj), (newVal, oldVal) => {
+  console.log('对象变化:', newVal, oldVal);
 });
 \`\`\`
 
-## 响应式系统的优势
+## 性能优化建议
 
-1. **精确性**：只有数据真正变化时才触发更新
-2. **性能**：避免了不必要的DOM操作
-3. **简洁性**：开发者无需手动管理数据绑定
+### 1. 避免深层响应式
+
+\`\`\`javascript
+// 不好的做法：深层响应式
+const data = reactive({
+  user: {
+    profile: {
+      settings: {
+        theme: 'dark'
+      }
+    }
+  }
+});
+
+// 好的做法：扁平化数据结构
+const data = reactive({
+  userTheme: 'dark',
+  userSettings: { /* 其他设置 */ }
+});
+\`\`\`
+
+### 2. 合理使用 computed
+
+\`\`\`javascript
+// 使用 computed 缓存计算结果
+const expensiveValue = computed(() => {
+  return heavyCalculation(props.data);
+});
+
+// 避免在模板中直接计算
+// 不好的做法
+<template>
+  <div>{{ heavyCalculation(data) }}</div>
+</template>
+\`\`\`
+
+### 3. 使用 shallowRef 和 shallowReactive
+
+\`\`\`javascript
+// 对于不需要深层响应式的数据
+const largeList = shallowRef([]);
+const config = shallowReactive({
+  theme: 'dark',
+  language: 'zh-CN'
+});
+\`\`\`
 
 ## 总结
 
-Vue.js 的响应式系统通过数据劫持和发布订阅模式，实现了高效的数据驱动视图更新机制。理解其原理有助于我们更好地使用Vue.js进行开发。
+Vue.js 的响应式系统通过数据劫持和发布订阅模式，实现了高效的数据驱动视图更新机制。Vue 2.0 使用 Object.defineProperty，而 Vue 3.0 使用 Proxy，在性能和功能上都有显著提升。
+
+理解响应式原理有助于我们：
+1. **更好地使用 Vue.js**：了解何时会触发更新，如何优化性能
+2. **调试问题**：当数据变化没有触发更新时，知道可能的原因
+3. **扩展功能**：基于响应式原理实现自定义的响应式功能
+4. **面试准备**：深入理解前端框架的核心机制
+
+响应式系统是 Vue.js 的核心，掌握其原理对于深入理解和使用 Vue.js 至关重要。
     `,
     author: '钱诚',
     publishedAt: '2024-01-20',
-    tags: ['Vue.js', 'JavaScript', '前端开发', '面试题'],
-    readTime: 10,
+    tags: ['Vue.js', 'JavaScript', '前端开发', '面试题', '响应式', '源码解读'],
+    readTime: 25,
     featured: true,
   },
   {
@@ -3106,7 +3907,8 @@ function encodeHtml(text) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#x27;');
+    .replace(/'/g, '&#x27;')
+    .replace(/\\//g, '&#x2F;');
 }
 
 // CSP 设置
