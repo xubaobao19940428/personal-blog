@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Sun, Moon, Sparkles, Home, BookOpen, FolderOpen, User, Zap } from 'lucide-react';
 import Clock from './Clock';
@@ -11,6 +11,15 @@ interface HeaderProps {
 export default function Header({ isDark, toggleTheme }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => {
+      setScrolled(window.scrollY > 8);
+    };
+    window.addEventListener('scroll', onScroll);
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   const navigation = [
     { name: '首页', href: '/', icon: Home },
@@ -22,7 +31,14 @@ export default function Header({ isDark, toggleTheme }: HeaderProps) {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <header className="glass-effect shadow-xl sticky top-0 z-50 backdrop-blur-xl border-b border-white/20 dark:border-gray-700/50">
+    <header
+      className={`sticky top-0 z-50 transition-all duration-300
+        ${scrolled
+          ? 'bg-white dark:bg-gray-900 shadow-2xl border-b-2 border-primary-500/60'
+          : 'bg-gradient-to-b from-white/80 via-white/10 to-transparent dark:from-gray-900/80 dark:via-gray-900/10 dark:to-transparent border-b-0 shadow-none'}
+        backdrop-blur-xl`
+      }
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           {/* Logo */}
