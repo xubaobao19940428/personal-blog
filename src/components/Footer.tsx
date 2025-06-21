@@ -119,7 +119,7 @@ export default function Footer() {
                 <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
                     <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
                         <p className="text-gray-600 dark:text-gray-400">
-                            © {currentYear} {author.name}. 保留所有权利。
+                            © <a href='https://beian.miit.gov.cn/'>浙ICP备2024084395号-2</a> 
                         </p>
                         <p className="text-gray-600 dark:text-gray-400">
                             使用 React + TypeScript + Tailwind CSS 构建
